@@ -10,7 +10,7 @@
 ### 1. 底层网络与会话管理 (Networking & Session)
 本项目从底层构建了标准的局域网联机闭环，确保多人对战的无缝接入与公平性。
 * **局域网大厅机制**：通过 `UArenaGameInstance` 接入 `IOnlineSubsystem` (在线子系统)。
-* **公开会话**：房主调用 `CreateSession` 建立最大4人的公开连接会话，并以 Listen Server 模式载入地图。
+* **公开会话**：房主调用 `CreateSession` 建立多人的公开连接会话，并以 Listen Server 模式载入地图。
 * **无缝漫游 (Client Travel)**：客户端利用 `FOnlineSessionSearch` 动态检索子网内的活跃主机，匹配成功后通过 `JoinSession` 实现无缝直连。
 * **权限仲裁 (Server Authoritative)**：将高敏感操作 (如伤害结算、弹药扣除、武器拾取) 收归服务器。
 * **反作弊机制**：客户端请求均通过 Server RPC (如 `Server_Fire`) 上报，从物理底层阻断客户端内存篡改等作弊途径。
