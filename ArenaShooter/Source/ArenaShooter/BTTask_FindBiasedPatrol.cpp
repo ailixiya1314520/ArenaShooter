@@ -14,9 +14,6 @@ UBTTask_FindBiasedPatrol::UBTTask_FindBiasedPatrol()
 	ConeHalfAngle = 45.0f;
 	NavSearchRadius = 150.0f;
 	bEnableFallbackRandom = true;
-
-	// 【核心优化】强行限制该任务在行为树编辑器中，只能选择 Vector 类型的黑板键！
-	// 这样你就绝对不会再因为选错成 TargetActor 或 SelfActor 而导致寻路崩溃了。
 	BlackboardKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_FindBiasedPatrol, BlackboardKey));
 }
 
@@ -36,7 +33,6 @@ EBTNodeResult::Type UBTTask_FindBiasedPatrol::ExecuteTask(UBehaviorTreeComponent
 	FVector OriginLocation = AIPawn->GetActorLocation();
 	FVector SearchDirection;
 
-	// 【逻辑优化】获取偏向目标的优先级判定
 	UObject* TargetObject = BlackboardComp->GetValueAsObject(TEXT("TargetActor"));
 	if (AActor* TargetActor = Cast<AActor>(TargetObject))
 	{
@@ -45,13 +41,12 @@ EBTNodeResult::Type UBTTask_FindBiasedPatrol::ExecuteTask(UBehaviorTreeComponent
 	}
 	else if (BlackboardComp->IsVectorValueSet(TEXT("LastKnownLocation")))
 	{
-		// 2. 如果玩家刚消失，朝玩家最后已知位置的方向偏向（智能索敌）
+		// 2. 如果玩家刚消失，朝玩家最后已知位置的方向偏向
 		FVector LastKnown = BlackboardComp->GetValueAsVector(TEXT("LastKnownLocation"));
 		SearchDirection = (LastKnown - OriginLocation).GetSafeNormal();
 	}
 	else
 	{
-		// 3. 彻底日常巡逻状态，朝自身前方偏向
 		SearchDirection = AIPawn->GetActorForwardVector();
 	}
 
@@ -67,7 +62,6 @@ EBTNodeResult::Type UBTTask_FindBiasedPatrol::ExecuteTask(UBehaviorTreeComponent
 	FVector TargetPoint = OriginLocation + (BiasedDirection * PatrolRadius);
 	FNavLocation PatrolNavLocation;
 
-	// 【空间优化】使用精确投影代替大范围随机，Z轴容差严格限制为 NavSearchRadius
 	FVector ProjectionExtent(NavSearchRadius, NavSearchRadius, NavSearchRadius);
 	bool bFoundPoint = NavSys->ProjectPointToNavigation(TargetPoint, PatrolNavLocation, ProjectionExtent);
 
@@ -77,8 +71,6 @@ EBTNodeResult::Type UBTTask_FindBiasedPatrol::ExecuteTask(UBehaviorTreeComponent
 		return EBTNodeResult::Succeeded;
 	}
 
-	// 【兜底优化】如果算出的点在悬崖外，或者被墙卡死了，为了防止行为树在一帧内死循环
-	// 我们直接在 AI 原地脚边绝对安全的范围内，找一个落脚点敷衍过去。
 	if (bEnableFallbackRandom)
 	{
 		if (NavSys->GetRandomReachablePointInRadius(OriginLocation, PatrolRadius * 0.5f, PatrolNavLocation))

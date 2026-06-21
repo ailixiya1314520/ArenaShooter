@@ -8,7 +8,6 @@ UBTTask_FindSearchPoint::UBTTask_FindSearchPoint()
 {
 	NodeName = TEXT("Find Search Point");
 	SearchRadius = 600.0f;
-	// 强制限制该节点只能绑定 Vector 类型的黑板键
 	BlackboardKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_FindSearchPoint, BlackboardKey));
 }
 
@@ -19,7 +18,6 @@ EBTNodeResult::Type UBTTask_FindSearchPoint::ExecuteTask(UBehaviorTreeComponent&
 
 	if (!AIController || !BlackboardComp) return EBTNodeResult::Failed;
 
-	// 获取搜索的锚点（如果存有最后已知位置，就以那里为圆心；否则以自己当前位置为圆心）
 	FVector OriginLocation = AIController->GetPawn()->GetActorLocation();
 	if (BlackboardComp->IsVectorValueSet(TEXT("LastKnownLocation")))
 	{
@@ -35,7 +33,6 @@ EBTNodeResult::Type UBTTask_FindSearchPoint::ExecuteTask(UBehaviorTreeComponent&
 
 	if (bFoundPoint)
 	{
-		// 将算出的点写入我们指定的黑板键（SearchLocation）
 		BlackboardComp->SetValueAsVector(BlackboardKey.SelectedKeyName, SearchNavLocation.Location);
 		return EBTNodeResult::Succeeded;
 	}

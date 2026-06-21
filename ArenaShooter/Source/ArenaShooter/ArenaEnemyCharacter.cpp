@@ -9,7 +9,6 @@
 #include "Sound/SoundBase.h"
 #include "DrawDebugHelpers.h"
 #include "Components/WidgetComponent.h"
-// === 新增头文件 ===
 #include "AIC_ArenaEnemy.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -48,7 +47,6 @@ void AArenaEnemyCharacter::PerformAttack(AActor* TargetPlayer)
 {
 	if (bIsDead || !TargetPlayer) return;
 
-	// 🚨 双重保险：开火前发现目标已死亡，立刻停止开火并清空仇恨
 	if (TargetPlayer->ActorHasTag(FName("Dead")))
 	{
 		if (AAIC_ArenaEnemy* AIController = Cast<AAIC_ArenaEnemy>(GetController()))

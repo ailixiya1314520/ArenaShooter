@@ -9,8 +9,7 @@
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Hearing.h"
 #include "Kismet/GameplayStatics.h"
-#include "ArenaEnemyCharacter.h" // 需要获取敌人的死亡状态
-
+#include "ArenaEnemyCharacter.h" 
 AAIC_ArenaEnemy::AAIC_ArenaEnemy()
 {
 	BehaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
@@ -70,7 +69,6 @@ void AAIC_ArenaEnemy::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus
 				GetWorld()->GetTimerManager().ClearTimer(TimerHandle_ForgetPlayer);
 				BlackboardComp->SetValueAsObject(TEXT("TargetActor"), Player);
 
-				// 🚨 新增：自己看到玩家了，立刻通知周围的兄弟！
 				AlertNearbyEnemies(Player);
 			}
 			else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
@@ -114,7 +112,6 @@ void AAIC_ArenaEnemy::AlertNearbyEnemies(AActor* SpottedTarget)
 				{
 					if (UBlackboardComponent* FriendBB = FriendAI->GetBlackboardComponent())
 					{
-						// 如果兄弟目前没有目标，直接把玩家坐标塞进他的黑板！
 						if (FriendBB->GetValueAsObject(TEXT("TargetActor")) == nullptr)
 						{
 							FriendBB->SetValueAsObject(TEXT("TargetActor"), SpottedTarget);
