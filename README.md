@@ -27,8 +27,7 @@
 玩家角色的战斗交互深度融合了 GAS 架构，实现了极高的扩展性与优秀的网络手感。
 * **客户端本地预测 (Client-side Prediction)**：开火时通过 `FScopedPredictionWindow` 生成 PredictionKey，在本地无延迟应用弹药扣除的 GameplayEffect，掩盖网络延迟，实现“零延迟”开火手感。
 * **原生伤害桥接 GAS**：重写原生的 `TakeDamage` 方法，动态生成瞬时型 (Instant) Gameplay Effect，将环境伤害无缝转入 GAS 系统。
-* **护甲优先级 TTK**：在 `UArenaAttributeSet::PostGameplayEffectExecute` 中实现优先扣除护甲 (最多吸收 50% 单次伤害)、剩余穿透至真实血量的立体 TTK 逻辑。
-
+* 
 ### 4. 数据驱动实体系统 (Data-Driven Entities)
 摒弃复杂的代码派生，采用高度数据驱动的设计模式管理武器与弹道实体。
 * **参数化武器库**：通过定义 `FWeaponStats` 结构体，将射速、后坐力偏转、弹丸数量及散布角度暴露至蓝图。
