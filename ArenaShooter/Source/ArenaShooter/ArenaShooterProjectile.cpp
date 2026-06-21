@@ -3,41 +3,66 @@
 #include "ArenaShooterProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemGlobals.h"
 
-AArenaShooterProjectile::AArenaShooterProjectile() 
+AArenaShooterProjectile::AArenaShooterProjectile()
 {
-	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(5.0f);
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
-	CollisionComp->OnComponentHit.AddDynamic(this, &AArenaShooterProjectile::OnHit);		// set up a notification for when this component hits something blocking
+	CollisionComp->OnComponentHit.AddDynamic(this, &AArenaShooterProjectile::OnHit);
 
-	// Players can't walk on it
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	CollisionComp->CanCharacterStepUpOn = ECB_No;
 
-	// Set as root component
 	RootComponent = CollisionComp;
 
-	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
-	ProjectileMovement->InitialSpeed = 3000.f;
-	ProjectileMovement->MaxSpeed = 3000.f;
-	ProjectileMovement->bRotationFollowsVelocity = true;
-	ProjectileMovement->bShouldBounce = true;
 
-	// Die after 3 seconds by default
+	ProjectileMovement->InitialSpeed = 8000.f;
+	ProjectileMovement->MaxSpeed = 8000.f;
+
+	ProjectileMovement->ProjectileGravityScale = 0.0f;
+
+	ProjectileMovement->bRotationFollowsVelocity = true;
+
+	ProjectileMovement->bShouldBounce = false;
+
 	InitialLifeSpan = 3.0f;
 }
-
 void AArenaShooterProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Only add impulse and destroy projectile if we hit a physics
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
+
+	if (OtherActor == nullptr ||
+		OtherActor == this ||
+		OtherActor == GetInstigator() ||
+		OtherActor->IsA(AArenaShooterProjectile::StaticClass()))
+	{
+		return;
+	}
+
+	UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OtherActor);
+
+	if (TargetASC && DamageEffectClass)
+	{
+		FGameplayEffectContextHandle ContextHandle = TargetASC->MakeEffectContext();
+		ContextHandle.AddInstigator(GetInstigator(), this);
+		FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(DamageEffectClass, 1.0f, ContextHandle);
+		TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+	}
+	else
+	{
+		AController* InstigatorController = GetInstigator() ? GetInstigator()->GetController() : nullptr;
+		UGameplayStatics::ApplyDamage(OtherActor, 25.0f, InstigatorController, this, UDamageType::StaticClass());
+	}
+
+	if (OtherComp != nullptr && OtherComp->IsSimulatingPhysics())
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
-
-		Destroy();
 	}
+
+	Destroy();
 }

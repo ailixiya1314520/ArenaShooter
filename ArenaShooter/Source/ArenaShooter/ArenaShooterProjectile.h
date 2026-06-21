@@ -9,13 +9,13 @@
 class USphereComponent;
 class UProjectileMovementComponent;
 
-UCLASS(config=Game)
+UCLASS(config = Game)
 class AArenaShooterProjectile : public AActor
 {
 	GENERATED_BODY()
 
 	/** Sphere collision component */
-	UPROPERTY(VisibleDefaultsOnly, Category=Projectile)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Projectile, meta = (AllowPrivateAccess = "true"))
 	USphereComponent* CollisionComp;
 
 	/** Projectile movement component */
@@ -33,5 +33,7 @@ public:
 	USphereComponent* GetCollisionComp() const { return CollisionComp; }
 	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
-};
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GAS")
+	TSubclassOf<class UGameplayEffect> DamageEffectClass;
+};
